@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+const { query, validationResult } = require('express-validator');
 
 (async () => {
 
@@ -30,6 +31,20 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   /**************************************************************************** */
 
   //! END @TODO1
+  app.get( "/filteredimage", [
+    query('image_url').isURL()
+  ], async ( req: express.Request, res: express.Response ) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  filterImageFromURL(req.query.image_url).then((img) => {
+    res.status(200).sendFile(img,() => {
+      deleteLocalFiles([img]);
+    });
+  });
+});
   
   // Root Endpoint
   // Displays a simple message to the user
